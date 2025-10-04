@@ -1,6 +1,6 @@
 import { ItemView, WorkspaceLeaf, TFile, Notice } from 'obsidian';
+import MyPlugin from "./main";
 
-import MyPlugin from "../main";
 // 在文件中添加AI对话视图类
 export class AIChatView extends ItemView {
 	private chatContainer: HTMLElement;
@@ -80,12 +80,12 @@ export class AIChatView extends ItemView {
 
 
 		// 添加一些默认样式
-		this.addStyles();
+		//this.addStyles();
 	}
 
-	// 修改 toggleConnection 方法
+	// toggleConnection 方法
 	private async toggleConnection() {
-		const wsManager = this.plugin.getWebSocketManager();
+		const wsManager = this.plugin.websocketManager;
 		if (wsManager) {
 			if (this.connectButton.textContent === "连接 WebSocket") {
 				try {
@@ -101,7 +101,7 @@ export class AIChatView extends ItemView {
 			} else {
 				wsManager.disconnect();
 				this.connectionStatus.textContent = "WebSocket 未连接";
-				this.connectButton.textContent = "连接 WebSocket";
+				this.connectButton.textContent = "连接 WebSocket 开启文件功能";
 				new Notice("WebSocket 连接已断开");
 				// 清除定时器
 				if (this.disconnectTimer) {
@@ -112,7 +112,7 @@ export class AIChatView extends ItemView {
 		}
 	}
 
-	// 修改 addStyles 方法，优化样式布局
+	// 优化样式布局
 	private addStyles() {
 		const style = document.createElement("style");
 		style.textContent = `
@@ -122,7 +122,7 @@ export class AIChatView extends ItemView {
             height: calc(100% - 40px); /* 为连接状态留出空间 */
             padding: 10px;
         }
-        
+
         .connection-status {
             display: flex;
             justify-content: space-between;
@@ -133,19 +133,19 @@ export class AIChatView extends ItemView {
             border-radius: 4px;
             background-color: var(--background-primary);
         }
-        
+
         .status-text {
             font-size: 0.9em;
             color: var(--text-muted);
             margin-right: 10px; /* 增加右边距 */
         }
-        
+
         .connect-button {
             padding: 6px 12px;
             font-size: 0.9em;
             white-space: nowrap;
         }
-        
+
         .ai-messages {
             flex: 1;
             overflow-y: auto;
@@ -154,40 +154,40 @@ export class AIChatView extends ItemView {
             border-radius: 4px;
             padding: 10px;
         }
-        
+
         .ai-message {
             margin-bottom: 15px;
             padding: 10px;
             border-radius: 5px;
         }
-        
+
         .ai-message.user {
             background-color: var(--background-primary-alt);
             margin-left: 20%;
         }
-        
+
         .ai-message.ai {
             background-color: var(--background-secondary);
             margin-right: 20%;
         }
-        
+
         .ai-message-header {
             font-weight: bold;
             margin-bottom: 5px;
         }
-        
+
         .ai-input-container {
             display: flex;
             gap: 10px;
             align-items: flex-end;
         }
-        
+
         .ai-input {
             flex: 1;
             min-height: 60px;
             resize: vertical;
         }
-        
+
         .ai-send-button {
             align-self: flex-end;
             padding: 8px 16px;
@@ -205,7 +205,7 @@ export class AIChatView extends ItemView {
 
 		// 设置新的定时器
 		this.disconnectTimer = window.setTimeout(() => {
-			const wsManager = this.plugin.getWebSocketManager();
+			const wsManager = this.plugin.websocketManager;
 			if (wsManager) {
 				wsManager.disconnect();
 				this.connectionStatus.textContent = "WebSocket 未连接";

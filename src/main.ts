@@ -1,7 +1,7 @@
 // 在 main.ts 顶部导入 ItemView 和 WorkspaceLeaf
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, ItemView, WorkspaceLeaf, TFile } from 'obsidian';
+import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, WorkspaceLeaf, TFile } from 'obsidian';
 import { WebSocketManager } from './websocketManager';
-import { AIChatView } from './src/AIChatView';
+import { AIChatView } from './AIChatView';
 
 // Remember to rename these classes and interfaces!
 
@@ -19,7 +19,7 @@ export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings;
 	private chatId: string; // 添加 chatId 属性
 	// 在 MyPlugin 类中添加常量
-	static VIEW_TYPE_CHAT = "ai-chat-view";
+	static VIEW_TYPE_CHAT = "ai-tool-chat-view";
 
 	// 在 MyPlugin 类中添加 WebSocketManager 的 getter
 	private _websocketManager: WebSocketManager | null = null;
@@ -30,14 +30,6 @@ export default class MyPlugin extends Plugin {
 		}
 		return this._websocketManager;
 	}
-
-	public getWebSocketManager(): WebSocketManager {
-		if (!this._websocketManager) {
-			this._websocketManager = new WebSocketManager(this);
-		}
-		return this._websocketManager;
-	}
-
 
 	// 生成唯一的 chatId
 	private generateChatId(): string {
@@ -167,7 +159,6 @@ export default class MyPlugin extends Plugin {
 			}
 		});
 
-
 		// 添加右键菜单选项
 		this.registerEvent(
 			this.app.workspace.on("editor-menu", (menu, editor, view) => {
@@ -204,7 +195,6 @@ export default class MyPlugin extends Plugin {
 				}
 			})
 		);
-
 
 		this.addCommand({
 			id: 'create-my-note',
@@ -284,8 +274,6 @@ export default class MyPlugin extends Plugin {
 			throw error;
 		}
 	}
-
-
 
 	onunload() {
 		// 断开 WebSocket 连接
