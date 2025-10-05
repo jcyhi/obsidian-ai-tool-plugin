@@ -53,10 +53,18 @@ export default class MyPlugin extends Plugin {
 		console.log(`Generated chatId: ${this.chatId}`);
 
 		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (_evt: MouseEvent) => {
+		// const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (_evt: MouseEvent) => {
+		// 	// Called when the user clicks the icon.
+		// 	new Notice('This is a notice!xxx');
+		// });
+
+		// 替换原有的 ribbon icon 代码
+		const ribbonIconEl = this.addRibbonIcon('dice', 'AI Chat', async (_evt: MouseEvent) => {
 			// Called when the user clicks the icon.
-			new Notice('This is a notice!xxx');
+			await this.activateView();
 		});
+
+
 		// Perform additional things with the ribbon
 		ribbonIconEl.addClass('my-plugin-ribbon-class');
 
@@ -196,15 +204,6 @@ export default class MyPlugin extends Plugin {
 			})
 		);
 
-		this.addCommand({
-			id: 'create-my-note',
-			name: '创建我的笔记',
-			callback: () => {
-				// 调用创建函数
-				this.createMarkdownFile('我的新笔记.md', '# 欢迎\n\n这是新笔记的内容。');
-			}
-		});
-
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new SampleSettingTab(this.app, this));
 
@@ -220,18 +219,32 @@ export default class MyPlugin extends Plugin {
 
 	// 在 MyPlugin 类中添加激活视图的方法
 	private async activateView() {
-		this.app.workspace.detachLeavesOfType(MyPlugin.VIEW_TYPE_CHAT);
+		const leaves = this.app.workspace.getLeavesOfType(MyPlugin.VIEW_TYPE_CHAT);
 
-		const rightLeaf = this.app.workspace.getRightLeaf(false);
-		if (rightLeaf) {
-			await rightLeaf.setViewState({
-				type: MyPlugin.VIEW_TYPE_CHAT,
-				active: true,
-			});
+		if (leaves.length > 0) {
+			// 如果视图已经存在，检查是否可见
+			const leaf = leaves[0];
+			if (leaf.view.containerEl.parentElement?.style.display === 'none') {
+				// 如果隐藏则显示
+				this.app.workspace.revealLeaf(leaf);
+			} else {
+				// 如果显示则隐藏
+				leaf.detach();
+			}
+		} else {
+			console.log("always in it");
+			// 如果视图不存在，则创建新视图
+			const rightLeaf = this.app.workspace.getRightLeaf(false);
+			if (rightLeaf) {
+				await rightLeaf.setViewState({
+					type: MyPlugin.VIEW_TYPE_CHAT,
+					active: true,
+				});
 
-			const leaves = this.app.workspace.getLeavesOfType(MyPlugin.VIEW_TYPE_CHAT);
-			if (leaves.length > 0) {
-				this.app.workspace.revealLeaf(leaves[0]);
+				const newLeaves = this.app.workspace.getLeavesOfType(MyPlugin.VIEW_TYPE_CHAT);
+				if (newLeaves.length > 0) {
+					this.app.workspace.revealLeaf(newLeaves[0]);
+				}
 			}
 		}
 	}

@@ -58,7 +58,6 @@ export class WebSocketManager {
 	handleMessage(data: string) {
 		 try {
 		 	const message: Message = JSON.parse(data);
-		 	console.log('Received message:', message);
 			if (message.functionName === 'createFile') {
 				this.createFile(message.filePath, message.fileContent);
 			}

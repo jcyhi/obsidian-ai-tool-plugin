@@ -13,14 +13,14 @@ export class AIChatView extends ItemView {
 
 	// 在类中添加定时器属性
 	private disconnectTimer: number | null = null;
-	private readonly DISCONNECT_TIMEOUT = 60 * 1000; // 5分钟
+	private readonly DISCONNECT_TIMEOUT = 60 * 1000; // 1分钟
 
 	constructor(leaf: WorkspaceLeaf, private plugin: MyPlugin) {
 		super(leaf);
 	}
 
 	getViewType(): string {
-		return "ai-chat-view";
+		return "ai-tool-chat-view";
 	}
 
 	getDisplayText(): string {

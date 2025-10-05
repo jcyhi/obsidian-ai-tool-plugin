@@ -1,94 +1,49 @@
-# Obsidian Sample Plugin
+# 介绍
+## 功能： 
+1. 在 Obsidian 中提供免费的 AI 对话服务，向 通义千问的 AI 大模型提问。
+2. 通过聊天能够让 AI 通过工具调用，自动帮你创建 文本文件，需要点击连接websocket实现此功能。
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+## 目的
+可以通过跟 AI 聊天，让 AI 自动创建文件，更加轻松的学习 Obsidian 基础用法。
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+## 特别注意
+1. 只能在桌面端 Obsidian 使用。
+2. 请勿发送敏感信息，例如密码之类的。会将 对话内容 存储到 云服务器的内存中，以支持 AI 对话记忆功能。
+3. 需要网络, 通过 HTTP 连接云服务器，获取 AI 生成内容，
+4. 会通过 WebSocket 连接到您电脑，以支持 AI 调用工具，只能调用在 Obsidian 的 创建文件功能。
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+# 快速开始
+## 下载
+1. 从 https://github.com/jcyhi/obsidian-ai-tool-plugin 下载
+2. 放到 obsidian 库的 xxxx/{your valut name}/.obsidian/plugins/ 文件夹下
+3. 在 obsidian 中，点击插件管理，启动插件。
+## 使用
+限制 10 次对话次数，重新启动插件可刷新次数。
 
-## First time developing plugins?
+### 示例：
+1. 需要良好的网络，点击连接websocket, 启动 AI 调用工具的能力。
+2. 输入：请帮我创建2个文件，向我展示 Obsidian 双向链接 基础用法。
 
-Quick starting guide for new plugin devs:
+# Introduction
+## Features:
+1. Provide free AI chat service in Obsidian, allowing you to ask questions to the Tongyi Qianwen AI model.
+2. Enable AI to automatically create text files through tool calls via chat. This function requires clicking to connect to WebSocket.
+## Purpose
+You can chat with AI to let it automatically create files, making it easier to learn the basic usage of Obsidian.
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+## Special Notes
+1. This plugin can only be used on the desktop version of Obsidian.
+2. Do not send sensitive information (e.g., passwords). Conversation content will be stored in the cloud server’s memory to support the AI conversation memory feature.
+3. An internet connection is required. The plugin obtains AI-generated content by connecting to the cloud server via HTTP.
+4. It will connect to your computer via WebSocket to support AI tool calls. Only the file creation function within Obsidian can be invoked.
 
-## Releasing new releases
-
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
-
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
-
-## Adding your plugin to the community plugin list
-
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
-
-## How to use
-
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
-
-## Manually installing the plugin
-
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
-
-## Improve code quality with eslint (optional)
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- To use eslint with this project, make sure to install eslint from terminal:
-  - `npm install -g eslint`
-- To use eslint to analyze this project use this command:
-  - `eslint main.ts`
-  - eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
-  - `eslint ./src/`
-
-## Funding URL
-
-You can include funding URLs where people who use your plugin can financially support it.
-
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
-
-```json
-{
-    "fundingUrl": "https://buymeacoffee.com"
-}
-```
-
-If you have multiple URLs, you can also do:
-
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
-    }
-}
-```
-
-## API Documentation
-
-See https://github.com/obsidianmd/obsidian-api
+# Quick Start
+## Download
+1. Download from https://github.com/jcyhi/obsidian-ai-tool-plugin
+2. Place the downloaded files into the folder: xxxx/{your vault name}/.obsidian/plugins/ of your Obsidian vault
+3. In Obsidian, go to Plugin Management and enable the plugin.
+## Usage
+The number of conversations is limited to 10. Restarting the plugin will reset the count.
+### Example:
+1. A stable network connection is required. Click to connect to WebSocket to activate AI's tool-calling capability.
+2. Input: Please help me create 2 files to demonstrate the basic usage of Obsidian bidirectional links.
