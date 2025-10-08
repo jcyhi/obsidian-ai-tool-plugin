@@ -1,6 +1,6 @@
 {
-	"name": "AI-tool-gen-text",
-	"version": "1.0.0",
+	"name": "ai-tool-gen-text",
+	"version": "1.0.2",
 	"description": "Talk to AI to learn basic use of obsidian",
 	"main": "main.js",
 	"scripts": {

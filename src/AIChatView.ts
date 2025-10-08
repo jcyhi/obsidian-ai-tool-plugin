@@ -106,7 +106,7 @@ export class AIChatView extends ItemView {
 				this.connectionStatus.textContent = "正在连接";
 				this.connectButton.textContent = "正在连接";
 				// 建立连接依靠网络，延时等待
-				await new Promise(resolve => setTimeout(resolve, 1500));
+				await new Promise(resolve => setTimeout(resolve, 2000));
 				if (wsManager.isConnected()) {
 					// 确保连接成功
 					this.updateConnectionUI(true);
@@ -115,6 +115,7 @@ export class AIChatView extends ItemView {
 					this.resetDisconnectTimer();
 				}
 				else {
+
 					new Notice("WebSocket 连接失败");
 					this.updateConnectionUI(false);
 				}

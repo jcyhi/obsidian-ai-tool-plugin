@@ -1,11 +1,10 @@
 {
-	"id": "AI-tool-gen-text",
-	"name": "AI-tool-gen-text",
-	"version": "1.0.1",
+	"id": "ai-tool-gen-text",
+	"name": "ai-tool-gen-text",
+	"version": "1.0.2",
 	"minAppVersion": "1.5.0",
 	"description": "Automatically create text notes by chatting with AI.",
 	"author": "Chenyi Jin",
 	"authorUrl": "https://github.com/jcyhi",
-	"fundingUrl": "https://obsidian.md/pricing",
 	"isDesktopOnly": true
 }
