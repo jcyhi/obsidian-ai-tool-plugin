@@ -1,5 +1,5 @@
 import { ItemView, WorkspaceLeaf, TFile, Notice } from 'obsidian';
-import MyPlugin from "./main";
+import AIToolPlugin from "./main";
 
 // 在文件中添加AI对话视图类
 export class AIChatView extends ItemView {
@@ -13,14 +13,16 @@ export class AIChatView extends ItemView {
 
 	// 在类中添加定时器属性
 	private disconnectTimer: number | null = null;
-	private readonly DISCONNECT_TIMEOUT = 60 * 1000; // 1分钟
+	private readonly DISCONNECT_TIMEOUT = 5 * 60 * 1000; // 5分钟
 
-	constructor(leaf: WorkspaceLeaf, private plugin: MyPlugin) {
+	constructor(leaf: WorkspaceLeaf, private plugin: AIToolPlugin) {
 		super(leaf);
 	}
-
+	static getViewType(): string {
+		return "jcy-ai-tool-chat-view";
+	}
 	getViewType(): string {
-		return "ai-tool-chat-view";
+		return "jcy-ai-tool-chat-view";
 	}
 
 	getDisplayText(): string {
@@ -77,31 +79,41 @@ export class AIChatView extends ItemView {
 		});
 
 		this.connectButton.addEventListener("click", () => this.toggleConnection());
-
-
-		// 添加一些默认样式
-		//this.addStyles();
 	}
 
-	// toggleConnection 方法
 	private async toggleConnection() {
 		const wsManager = this.plugin.websocketManager;
-		if (wsManager) {
-			if (this.connectButton.textContent === "连接 WebSocket") {
-				try {
-					wsManager.connect();
-					this.connectionStatus.textContent = "WebSocket 已连接";
-					this.connectButton.textContent = "断开连接";
+		if (!wsManager) {
+			return;
+		}
+
+		// 使用 WebSocket 管理器的实际连接状态来判断
+		if (!wsManager.isConnected()) {
+			try {
+				wsManager.connect();
+				this.connectionStatus.textContent = "正在连接";
+				this.connectButton.textContent = "正在连接";
+				await new Promise(resolve => setTimeout(resolve, 1000));
+				if (wsManager.isConnected()) {
+					// 确保连接成功
+					this.updateConnectionUI(true);
 					new Notice("WebSocket 连接成功");
 					// 连接成功后启动定时器
 					this.resetDisconnectTimer();
-				} catch (error) {
-					new Notice("WebSocket 连接失败");
 				}
-			} else {
-				wsManager.disconnect();
-				this.connectionStatus.textContent = "WebSocket 未连接";
-				this.connectButton.textContent = "连接 WebSocket 开启文件功能";
+				else {
+					new Notice("WebSocket 连接失败");
+					this.updateConnectionUI(false);
+				}
+			} catch (error) {
+				new Notice("WebSocket 连接失败");
+			}
+		} else {
+			wsManager.disconnect();
+			await new Promise(resolve => setTimeout(resolve, 100));
+			if (!wsManager.isConnected()) {
+				// 断开连接后更新 UI
+				this.updateConnectionUI(false);
 				new Notice("WebSocket 连接已断开");
 				// 清除定时器
 				if (this.disconnectTimer) {
@@ -109,92 +121,19 @@ export class AIChatView extends ItemView {
 					this.disconnectTimer = null;
 				}
 			}
+			else new Notice("WebSocket 断开连接失败")
 		}
 	}
 
-	// 优化样式布局
-	private addStyles() {
-		const style = document.createElement("style");
-		style.textContent = `
-        .ai-chat-container {
-            display: flex;
-            flex-direction: column;
-            height: calc(100% - 40px); /* 为连接状态留出空间 */
-            padding: 10px;
-        }
-
-        .connection-status {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            padding: 8px;
-            border: 1px solid var(--background-modifier-border);
-            border-radius: 4px;
-            background-color: var(--background-primary);
-        }
-
-        .status-text {
-            font-size: 0.9em;
-            color: var(--text-muted);
-            margin-right: 10px; /* 增加右边距 */
-        }
-
-        .connect-button {
-            padding: 6px 12px;
-            font-size: 0.9em;
-            white-space: nowrap;
-        }
-
-        .ai-messages {
-            flex: 1;
-            overflow-y: auto;
-            margin-bottom: 10px;
-            border: 1px solid var(--background-modifier-border);
-            border-radius: 4px;
-            padding: 10px;
-        }
-
-        .ai-message {
-            margin-bottom: 15px;
-            padding: 10px;
-            border-radius: 5px;
-        }
-
-        .ai-message.user {
-            background-color: var(--background-primary-alt);
-            margin-left: 20%;
-        }
-
-        .ai-message.ai {
-            background-color: var(--background-secondary);
-            margin-right: 20%;
-        }
-
-        .ai-message-header {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .ai-input-container {
-            display: flex;
-            gap: 10px;
-            align-items: flex-end;
-        }
-
-        .ai-input {
-            flex: 1;
-            min-height: 60px;
-            resize: vertical;
-        }
-
-        .ai-send-button {
-            align-self: flex-end;
-            padding: 8px 16px;
-            height: fit-content;
-        }
-    `;
-		this.chatContainer.appendChild(style);
+	// 添加专门的 UI 更新方法
+	private updateConnectionUI(isConnected: boolean) {
+		if (isConnected) {
+			this.connectionStatus.textContent = "WebSocket 已连接";
+			this.connectButton.textContent = "断开连接";
+		} else {
+			this.connectionStatus.textContent = "WebSocket 未连接";
+			this.connectButton.textContent = "连接 WebSocket";
+		}
 	}
 
 	private resetDisconnectTimer() {
@@ -214,7 +153,6 @@ export class AIChatView extends ItemView {
 			}
 		}, this.DISCONNECT_TIMEOUT);
 	}
-
 
 	private async sendMessage() {
 		const message = this.inputElement.value.trim();
@@ -250,7 +188,7 @@ export class AIChatView extends ItemView {
 
 		} catch (error) {
 			console.error("AI请求失败:", error);
-			const aiMessageElement = this.addMessageToView("ai", "抱歉，请求失败了。请查看控制台了解更多信息。");
+			this.addMessageToView("ai", "抱歉，请求失败了。请查看控制台了解更多信息。");
 		}
 	}
 
@@ -279,6 +217,12 @@ export class AIChatView extends ItemView {
 
 	// 在 AIChatView 类中修改 saveConversationToFile 方法
 	private async saveConversationToFile() {
+		// 检查是否启用自动保存功能
+		if (!this.plugin.settings.autoSaveConversation) {
+			new Notice("自动保存功能已禁用");
+			return;
+		}
+
 		try {
 			// 获取当前日期作为文件名基础
 			const today = new Date();
@@ -320,8 +264,6 @@ export class AIChatView extends ItemView {
 			new Notice('保存对话记录失败');
 		}
 	}
-
-
 
 	async onClose() {
 		// 清理定时器

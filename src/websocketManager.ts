@@ -1,5 +1,5 @@
-import { Notice, Plugin } from 'obsidian';
-import MyPlugin from "./main";
+import { Notice } from 'obsidian';
+import AIToolPlugin from "./main";
 
 interface Message {
 	type: string;
@@ -7,14 +7,14 @@ interface Message {
 }
 
 export class WebSocketManager {
-	private plugin: MyPlugin;
+	private plugin: AIToolPlugin;
 	private websocket: WebSocket | null = null;
 	private reconnectAttempts: number = 0;
-	private maxReconnectAttempts: number = 5;
+	private maxReconnectAttempts: number = 2;
 	private chatId: string = '';
 	private shouldReconnect: boolean = true; // 添加这个标志
 
-	constructor(plugin: MyPlugin) {
+	constructor(plugin: AIToolPlugin) {
 		this.plugin = plugin;
 		this.websocket = null;
 		this.reconnectAttempts = 0;
@@ -24,16 +24,14 @@ export class WebSocketManager {
 
 	// 连接到 WebSocket 服务器
 	connect() {
-		const wsUrl = `${this.plugin.settings.apiUrl.replace('http', 'ws')}/websocket/chat?chatId=${encodeURIComponent(this.chatId)}`;
+		const wsUrl = `${this.plugin.API_URL.replace('https', 'wss')}/ws/chat?chatId=${encodeURIComponent(this.chatId)}`;
 
 		// 建立新连接时启用重连
 		this.shouldReconnect = true;
-
 		try {
 			this.websocket = new WebSocket(wsUrl);
 
 			this.websocket.onopen = (event: Event) => {
-				console.log('WebSocket connected:', event);
 				this.reconnectAttempts = 0;
 			};
 
@@ -42,7 +40,6 @@ export class WebSocketManager {
 			};
 
 			this.websocket.onclose = (event: CloseEvent) => {
-				console.log('WebSocket closed:', event);
 				this.handleReconnect();
 			};
 
@@ -59,16 +56,23 @@ export class WebSocketManager {
 		 try {
 		 	const message: Message = JSON.parse(data);
 			if (message.functionName === 'createFile') {
-				this.createFile(message.filePath, message.fileContent);
+				this.createFile(message.fileName, message.fileContent);
 			}
 		} catch (e) {
 			// 处理纯文本消息
-			console.log('Received text message:', data);
+			 this.showNotification('Received text message:' + data);
+			//console.log('Received text message:', data);
 		}
 	}
 
 	// 修改 WebSocketManager.ts 中的 createFile 方法
 	async createFile(relativePath: string, content: string) {
+		// 检查是否启用文件生成功能
+		if (!this.plugin.settings.enableFileGeneration) {
+			this.showNotification('文件生成功能已禁用');
+			return;
+		}
+
 		const { vault } = this.plugin.app;
 
 		try {
@@ -85,12 +89,38 @@ export class WebSocketManager {
 				await vault.createFolder(folderPath);
 			}
 
-			// 检查文件是否已存在
-			const existingFile = vault.getAbstractFileByPath(finalPath);
-			if (existingFile) {
-				console.warn(`File already exists: ${finalPath}`);
-				// 可以选择更新现有文件或提示用户
-				return;
+			// 处理重复文件名
+			let counter = 1;
+			let existingFile = vault.getAbstractFileByPath(finalPath);
+
+			// 如果文件已存在，则添加数字后缀
+			while (existingFile) {
+				const lastDotIndex = finalPath.lastIndexOf('.');
+				if (lastDotIndex > 0 && lastDotIndex > finalPath.lastIndexOf('/')) {
+					// 有文件扩展名的情况
+					const nameWithoutExt = finalPath.substring(0, lastDotIndex);
+					const ext = finalPath.substring(lastDotIndex);
+
+					// 检查是否已有数字后缀
+					const lastUnderscoreIndex = nameWithoutExt.lastIndexOf('_');
+					if (lastUnderscoreIndex > 0) {
+						const suffix = nameWithoutExt.substring(lastUnderscoreIndex + 1);
+						if (/^\d+$/.test(suffix)) {
+							// 已有数字后缀，递增
+							const baseName = nameWithoutExt.substring(0, lastUnderscoreIndex);
+							finalPath = `${baseName}_${counter}${ext}`;
+						} else {
+							// 没有数字后缀，添加
+							finalPath = `${nameWithoutExt}_${counter}${ext}`;
+						}
+					} else {
+						// 没有下划线，直接添加
+						finalPath = `${nameWithoutExt}_${counter}${ext}`;
+					}
+				}
+				// 检查新文件名是否也存在
+				existingFile = vault.getAbstractFileByPath(finalPath);
+				counter++;
 			}
 
 			// 创建新文件
@@ -126,7 +156,7 @@ export class WebSocketManager {
 
 		if (this.reconnectAttempts < this.maxReconnectAttempts) {
 			this.reconnectAttempts++;
-			console.log(`Attempting to reconnect... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+			// console.log(`Attempting to reconnect... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
 
 			// 等待一段时间后重连
 			setTimeout(() => {
@@ -148,5 +178,9 @@ export class WebSocketManager {
 			this.websocket.close();
 			this.websocket = null;
 		}
+	}
+
+	isConnected(): boolean {
+		return this.websocket !== null && this.websocket.readyState === WebSocket.OPEN;
 	}
 }

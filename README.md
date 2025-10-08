@@ -18,7 +18,7 @@
 2. 放到 obsidian 库的 xxxx/{your valut name}/.obsidian/plugins/ 文件夹下
 3. 在 obsidian 中，点击插件管理，启动插件。
 ## 使用
-限制 10 次对话次数，重新启动插件可刷新次数。
+m
 
 ### 示例：
 1. 需要良好的网络，点击连接websocket, 启动 AI 调用工具的能力。
