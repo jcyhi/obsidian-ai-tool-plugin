@@ -14,6 +14,9 @@ export class WebSocketManager {
 	private chatId: string = '';
 	private shouldReconnect: boolean = true; // 添加这个标志
 
+	// 在 WebSocketManager 类中添加属性
+	private onConnectionStatusChange: ((isConnected: boolean) => void) | null = null;
+
 	constructor(plugin: AIToolPlugin) {
 		this.plugin = plugin;
 		this.websocket = null;
@@ -33,6 +36,10 @@ export class WebSocketManager {
 
 			this.websocket.onopen = (event: Event) => {
 				this.reconnectAttempts = 0;
+				// 通知连接状态变更
+				if (this.onConnectionStatusChange) {
+					this.onConnectionStatusChange(true);
+				}
 			};
 
 			this.websocket.onmessage = (event: MessageEvent) => {
@@ -146,11 +153,21 @@ export class WebSocketManager {
 		new Notice(message);
 	}
 
+	// 添加设置回调的方法
+	setConnectionStatusCallback(callback: (isConnected: boolean) => void) {
+		this.onConnectionStatusChange = callback;
+	}
+
+
 	// 处理重连
 	handleReconnect() {
 		// 检查是否应该重连
 		if (!this.shouldReconnect) {
 			console.log('WebSocket disconnected permanently');
+			// 通知连接状态变更
+			if (this.onConnectionStatusChange) {
+				this.onConnectionStatusChange(false);
+			}
 			return;
 		}
 
@@ -165,6 +182,10 @@ export class WebSocketManager {
 		} else {
 			console.error('Max reconnect attempts reached');
 			this.showNotification('WebSocket 连接失败，请检查网络设置');
+			// 通知连接状态变更
+			if (this.onConnectionStatusChange) {
+				this.onConnectionStatusChange(false);
+			}
 		}
 	}
 

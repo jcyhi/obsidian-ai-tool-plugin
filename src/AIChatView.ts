@@ -37,6 +37,18 @@ export class AIChatView extends ItemView {
 		const container = this.containerEl.children[1];
 		container.empty();
 
+		// 在 onOpen() 方法中 WebSocket 连接设置后添加
+		const wsManager = this.plugin.websocketManager;
+		if (wsManager) {
+			wsManager.setConnectionStatusCallback((isConnected: boolean) => {
+				this.updateConnectionUI(isConnected);
+				if (isConnected) {
+					new Notice("WebSocket 重连成功");
+				}
+			});
+		}
+
+
 		// 创建聊天界面
 		this.chatContainer = container.createEl("div", { cls: "ai-chat-container" });
 
@@ -93,7 +105,8 @@ export class AIChatView extends ItemView {
 				wsManager.connect();
 				this.connectionStatus.textContent = "正在连接";
 				this.connectButton.textContent = "正在连接";
-				await new Promise(resolve => setTimeout(resolve, 1000));
+				// 建立连接依靠网络，延时等待
+				await new Promise(resolve => setTimeout(resolve, 1500));
 				if (wsManager.isConnected()) {
 					// 确保连接成功
 					this.updateConnectionUI(true);
