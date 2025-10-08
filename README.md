@@ -18,7 +18,7 @@
 2. 放到 obsidian 库的 xxxx/{your valut name}/.obsidian/plugins/ 文件夹下
 3. 在 obsidian 中，点击插件管理，启动插件。
 ## 使用
-m
+插件tokens所有用户共享，每日可用10000tokens,每天凌晨1点更新.
 
 ### 示例：
 1. 需要良好的网络，点击连接websocket, 启动 AI 调用工具的能力。
@@ -43,7 +43,7 @@ You can chat with AI to let it automatically create files, making it easier to l
 2. Place the downloaded files into the folder: xxxx/{your vault name}/.obsidian/plugins/ of your Obsidian vault
 3. In Obsidian, go to Plugin Management and enable the plugin.
 ## Usage
-The number of conversations is limited to 10. Restarting the plugin will reset the count.
+The plugin's tokens are shared among all users. There are 10,000 tokens available daily, and the token quota resets at 1:00 AM (UTC+8) every day.
 ### Example:
 1. A stable network connection is required. Click to connect to WebSocket to activate AI's tool-calling capability.
 2. Input: Please help me create 2 files to demonstrate the basic usage of Obsidian bidirectional links.
