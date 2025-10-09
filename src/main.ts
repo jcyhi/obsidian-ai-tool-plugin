@@ -61,9 +61,6 @@ export default class AIToolPlugin extends Plugin {
 			await this.activateView();
 		});
 
-		// Perform additional things with the ribbon
-		ribbonIconEl.addClass('my-plugin-ribbon-class');
-
 		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
 		const statusBarItemEl = this.addStatusBarItem();
 		statusBarItemEl.setText('Status Bar Text');
@@ -79,9 +76,6 @@ export default class AIToolPlugin extends Plugin {
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new AIToolPluginSettingTab(this.app, this));
-
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
 	}
 
 	// 在 AIToolPlugin 类中添加激活视图的方法
@@ -91,12 +85,16 @@ export default class AIToolPlugin extends Plugin {
 		if (leaves.length > 0) {
 			// 如果视图已经存在，检查是否可见
 			const leaf = leaves[0];
-			if (leaf.view.containerEl.parentElement?.style.display === 'none') {
-				// 如果隐藏则显示
-				await this.app.workspace.revealLeaf(leaf);
-			} else {
-				// 如果显示则隐藏
-				leaf.detach();
+			const parentElement = leaf.view.containerEl.parentElement;
+			if (parentElement) {
+				const computedStyle = window.getComputedStyle(parentElement);
+				if (computedStyle.display === 'none') {
+					// 如果隐藏则显示
+					await this.app.workspace.revealLeaf(leaf);
+				} else {
+					// 如果显示则隐藏
+					leaf.detach();
+				}
 			}
 		} else {
 			// 如果视图不存在，则创建新视图
