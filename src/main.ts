@@ -27,6 +27,9 @@ export default class AIToolPlugin extends Plugin {
 	// 在 AIToolPlugin 类中添加 WebSocketManager 的 getter
 	private _websocketManager: WebSocketManager | null = null;
 
+	// 添加状态栏元素引用
+	private statusBarItem: HTMLElement | null = null;
+
 	public get websocketManager(): WebSocketManager | null {
 		if (!this._websocketManager) {
 			this._websocketManager = new WebSocketManager(this);
@@ -61,9 +64,10 @@ export default class AIToolPlugin extends Plugin {
 			await this.activateView();
 		});
 
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status Bar Text');
+		// 初始化状态栏项
+		this.statusBarItem = this.addStatusBarItem();
+		this.statusBarItem.setText('AI: idle');
+		this.statusBarItem.addClass('ai-status-bar');
 
 		// 添加打开视图的命令
 		this.addCommand({
@@ -128,7 +132,21 @@ export default class AIToolPlugin extends Plugin {
 		await this.saveData(this.settings);
 	}
 
+	// 添加更新状态栏状态的方法
+	public updateAIStatus(status: 'idle' | 'generating') {
+		if (this.statusBarItem) {
+			if (status === 'generating') {
+				this.statusBarItem.setText('AI: generating...');
+			} else {
+				this.statusBarItem.setText('AI: idle');
+			}
+		}
+	}
+
+
 	async fetchAIResponse(prompt: string, onChunk: (chunk: string) => void, chatId: string): Promise<void> {
+		// 设置状态为生成中
+		this.updateAIStatus('generating');
 
 		const url = `${this.API_URL}/ai/chat/sse?message=${encodeURIComponent(prompt)}&chatId=${chatId}`;
 
@@ -141,6 +159,10 @@ export default class AIToolPlugin extends Plugin {
 				// 处理各种结束标志
 				if (t === 'end') {
 					eventSource.close();
+
+					// 设置状态为空闲
+					this.updateAIStatus('idle');
+
 					resolve();
 					return;
 				}
@@ -155,6 +177,8 @@ export default class AIToolPlugin extends Plugin {
 					readyState: eventSource.readyState,
 					error: error
 				});
+				// 设置状态为空闲（错误状态也视为结束）
+				this.updateAIStatus('idle');
 				new Notice("AI 错误，请检查控制台");
 				if (eventSource.readyState === EventSource.CLOSED) {
 					resolve();
