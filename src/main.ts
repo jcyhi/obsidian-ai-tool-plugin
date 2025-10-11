@@ -21,14 +21,18 @@ export default class AIToolPlugin extends Plugin {
 	settings: AIToolPluginSettings;
 	private chatId: string; // 添加 chatId 属性
 	public readonly API_URL = 'https://ob-plugin.jcybe.com/api';
-	// 在 AIToolPlugin 类中添加常量
+
+	// view type
 	static readonly VIEW_TYPE_AI_CHAT = AIChatView.getViewType();
 
 	// 在 AIToolPlugin 类中添加 WebSocketManager 的 getter
 	private _websocketManager: WebSocketManager | null = null;
 
-	// 添加状态栏元素引用
+	// 状态栏元素引用
 	private statusBarItem: HTMLElement | null = null;
+
+	//  chatId 心跳
+	private heartbeatInterval: number | null = null;
 
 	public get websocketManager(): WebSocketManager | null {
 		if (!this._websocketManager) {
@@ -58,6 +62,9 @@ export default class AIToolPlugin extends Plugin {
 		this.chatId = this.generateChatId();
 		console.log(`Generated chatId: ${this.chatId}`);
 
+		// 注册 chatId
+		await this.registerChatId();
+
 		// 替换原有的 ribbon icon 代码
 		const ribbonIconEl = this.addRibbonIcon('dice', 'AI Chat', async (_evt: MouseEvent) => {
 			// Called when the user clicks the icon.
@@ -80,6 +87,53 @@ export default class AIToolPlugin extends Plugin {
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new AIToolPluginSettingTab(this.app, this));
+	}
+
+	// 添加注册 chatId 的方法
+	private async registerChatId(): Promise<void> {
+		try {
+			const response = await fetch(`${this.API_URL}/chatId/register?chatId=${this.chatId}`, {
+				method: 'POST'
+			});
+
+			const data = await response.json();
+
+			if (data.success) {
+				new Notice('AI 插件已启动');
+				// 开始心跳
+				this.startHeartbeat();
+			} else {
+				console.error('ChatId 注册失败, 服务器繁忙，请稍后再试:', data.message);
+			}
+		} catch (error) {
+			console.error('注册请求失败:', error);
+		}
+	}
+
+	// 添加心跳机制
+	private startHeartbeat(): void {
+		// 清除现有的定时器（如果有）
+		if (this.heartbeatInterval) {
+			window.clearInterval(this.heartbeatInterval);
+		}
+
+		// 设置新的心跳定时器（每10分钟）
+		this.heartbeatInterval = window.setInterval(async () => {
+			try {
+				const response = await fetch(`${this.API_URL}/chatid/heartbeat?chatId=${this.chatId}`, {
+					method: 'POST'
+				});
+
+				const data = await response.json();
+
+				if (!data.success) {
+					console.error('心跳失败，需要重新注册');
+					// 可以在这里添加重新注册逻辑
+				}
+			} catch (error) {
+				console.error('心跳请求失败:', error);
+			}
+		}, 10 * 60 * 1000); // 每10分钟发送一次心跳
 	}
 
 	// 在 AIToolPlugin 类中添加激活视图的方法
@@ -121,6 +175,12 @@ export default class AIToolPlugin extends Plugin {
 		// 断开 WebSocket 连接
 		if (this.websocketManager) {
 			this.websocketManager.disconnect();
+		}
+
+		// 清理心跳定时器
+		if (this.heartbeatInterval) {
+			window.clearInterval(this.heartbeatInterval);
+			this.heartbeatInterval = null;
 		}
 	}
 
