@@ -1,7 +1,7 @@
 {
 	"id": "ai-tool-gen-text",
 	"name": "ai-tool-gen-text",
-	"version": "1.0.5",
+	"version": "1.0.6",
 	"minAppVersion": "1.5.0",
 	"description": "Automatically create text notes by chatting with AI.",
 	"author": "Chenyi Jin",

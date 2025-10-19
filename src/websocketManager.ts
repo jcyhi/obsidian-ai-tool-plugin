@@ -62,21 +62,28 @@ export class WebSocketManager {
 	handleMessage(data: string) {
 		 try {
 		 	const message: Message = JSON.parse(data);
+			 //打印message
 			if (message.functionName === 'createFile') {
-				this.createFile(message.fileName, message.fileContent);
+				this.createFile(message.fileName, message.fileContent, message.requestId);
 			}
 		} catch (e) {
 			// 处理纯文本消息
 			 this.showNotification('Received text message:' + data);
-			//console.log('Received text message:', data);
 		}
 	}
 
 	// 修改 WebSocketManager.ts 中的 createFile 方法
-	async createFile(relativePath: string, content: string) {
+	async createFile(relativePath: string, content: string,  requestId?: string) {
 		// 检查是否启用文件生成功能
 		if (!this.plugin.settings.enableFileGeneration) {
 			this.showNotification('文件生成功能已禁用');
+			// 发送失败消息给后端
+			await this.sendFunctionCallResult({
+				functionName: 'createFile',
+				fileName: relativePath,
+				success: false,
+				requestId: requestId || ''
+			});
 			return;
 		}
 
@@ -139,12 +146,44 @@ export class WebSocketManager {
 
 			console.log(`File created successfully: ${newFile.path}`);
 			this.showNotification(`文件已创建: ${finalPath}`);
+			console.log("文件创建成功？");
+			// 发送成功消息给后端
+			await this.sendFunctionCallResult({
+				functionName: 'createFile',
+				fileName: finalPath,
+				success: true,
+				requestId: requestId || ''
+			});
 
 			return newFile;
 		} catch (error: any) {
 			console.error(`Failed to create file: ${error.message}`);
 			this.showNotification(`创建文件失败: ${error.message}`);
+
+			// 发送失败消息给后端
+			await this.sendFunctionCallResult({
+				functionName: 'createFile',
+				fileName: relativePath,
+				success: false,
+				requestId: requestId || ''
+			});
+
 			throw error;
+		}
+	}
+
+	// 添加发送函数调用结果的方法
+	async sendFunctionCallResult(result: {
+		functionName: string;
+		fileName: string;
+		success: boolean;
+		requestId: string;
+	}) {
+		if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+			this.websocket.send(JSON.stringify({
+				type: 'function_call_result',
+				...result
+			}));
 		}
 	}
 
